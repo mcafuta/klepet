@@ -113,7 +113,14 @@ $(document).ready(function() {
     return false;
   });
   
-  
+  var jc = $('#vsebina').jrumble();
+  socket.on('dregljaj', function () {
+    $('#vsebina').trigger('startRumble');
+    //setInterval(function())
+    setTimeout(function(){
+      $('#vsebina').trigger('stopRumble');
+    }, 1500);
+  });
 });
 
 function dodajSmeske(vhodnoBesedilo) {
