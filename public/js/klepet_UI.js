@@ -1,18 +1,33 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
   var img = sporocilo.indexOf("<img class='img'") > -1;
+  var video = sporocilo.indexOf("<iframe class='video'") > -1;
   if (jeSmesko) {
     sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } 
-  else if (img) {
+  else if (img || video) {
+    //if(img && video){
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').
+                                replace(new RegExp('&lt;img',"g"), '<div><img').replace(new RegExp('png\' /&gt;', "g"), 'png\' /></div>').
+                                replace(new RegExp('jpg\' /&gt;', "g"), 'jpg\' /></div>').replace(new RegExp('gif\' /&gt;', "g"), 'gif\' /></div>').
+                                replace(new RegExp('&lt;iframe',"g"), '<div><iframe').replace(new RegExp('allowfullscreen&gt;', "g"), 'allowfullscreen>').
+                                replace(new RegExp('&lt;/iframe&gt;', "g"), '</iframe></div>');
+    //}
+    //else if(img){
     /*sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').
                                 replace(new RegExp('&lt;img',"g"), '<br><img').replace('png\' /&gt;', 'png\' /><br>').
                                 replace(new RegExp('jpg\' /&gt;', "g"), 'jpg\' /><br>').replace('gif\' /&gt;', 'gif\' /><br>');   */
-                                
+    /*                            
     sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').
                                 replace(new RegExp('&lt;img',"g"), '<div><img').replace(new RegExp('png\' /&gt;', "g"), 'png\' /></div>').
                                 replace(new RegExp('jpg\' /&gt;', "g"), 'jpg\' /></div>').replace(new RegExp('gif\' /&gt;', "g"), 'gif\' /></div>');
+    //}
+    //else if (video) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(new RegExp('&lt;iframe',"g"), '<div><iframe').
+                          replace(new RegExp('allowfullscreen&gt;', "g"), 'allowfullscreen>').replace(new RegExp('&lt;/iframe&gt;', "g"), '</iframe></div>');
+    console.log(sporocilo);
+  //} */
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   }
   else {
@@ -28,6 +43,8 @@ function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
   sporocilo = dodajSmeske(sporocilo);
   sporocilo = dodajSliko(sporocilo);
+  sporocilo = dodajVideo(sporocilo);
+
   var sistemskoSporocilo;
 
   if (sporocilo.charAt(0) == '/') {
@@ -153,6 +170,7 @@ function dodajSmeske(vhodnoBesedilo) {
   return vhodnoBesedilo;
 }
 
+
 function dodajSliko(vhodnoBesedilo) {
   //  http:// ali https:// , .jpg, .png ali .gif
   //var image = /(https?:\/\/.*\.(?:\.png|\.jpg|\.gif))/ig;
@@ -170,5 +188,28 @@ function dodajSliko(vhodnoBesedilo) {
   }
   console.log(msg + " " + attachments);
   //return msg.join(' ');
-  return msg.join(' ') + attachments;
+  return msg.join(' ') +" "+ attachments;
+}
+
+function dodajVideo(vhodnoBesedilo) {
+  //https://www.youtube.com/watch?v={video}
+  ///http\:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})/;
+  var regex = /https:\/\/www\.youtube\.com\/watch\?v=([^\s]*)/gi;
+  var attachments = " ";
+  msg = vhodnoBesedilo.split(' ');
+  for(w in msg){
+    msg[w] = msg[w].replace(regex, function(url){
+      //return url+"\n<img class='img', src='" + url + "' />";
+
+      attachments += "<iframe class='video' src='";
+      var url_cpy = url.replace("watch?v=", "v/");
+      attachments += url_cpy;
+      attachments += "' allowfullscreen> </iframe>" + " ";
+      return url;
+    });
+  }
+  console.log(msg);
+  console.log(attachments);
+  //return msg.join(' ');
+  return msg.join(' ') +" "+ attachments;
 }
