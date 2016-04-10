@@ -1,9 +1,21 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
+  var img = sporocilo.indexOf("<img class='img'") > -1;
   if (jeSmesko) {
     sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
-  } else {
+  } 
+  else if (img) {
+    /*sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').
+                                replace(new RegExp('&lt;img',"g"), '<br><img').replace('png\' /&gt;', 'png\' /><br>').
+                                replace(new RegExp('jpg\' /&gt;', "g"), 'jpg\' /><br>').replace('gif\' /&gt;', 'gif\' /><br>');   */
+                                
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').
+                                replace(new RegExp('&lt;img',"g"), '<div><img').replace(new RegExp('png\' /&gt;', "g"), 'png\' /></div>').
+                                replace(new RegExp('jpg\' /&gt;', "g"), 'jpg\' /></div>').replace(new RegExp('gif\' /&gt;', "g"), 'gif\' /></div>');
+    return $('<div style="font-weight: bold"></div>').html(sporocilo);
+  }
+  else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
   }
 }
@@ -15,6 +27,7 @@ function divElementHtmlTekst(sporocilo) {
 function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
   sporocilo = dodajSmeske(sporocilo);
+  sporocilo = dodajSliko(sporocilo);
   var sistemskoSporocilo;
 
   if (sporocilo.charAt(0) == '/') {
@@ -138,4 +151,24 @@ function dodajSmeske(vhodnoBesedilo) {
       preslikovalnaTabela[smesko] + "' />");
   }
   return vhodnoBesedilo;
+}
+
+function dodajSliko(vhodnoBesedilo) {
+  //  http:// ali https:// , .jpg, .png ali .gif
+  //var image = /(https?:\/\/.*\.(?:\.png|\.jpg|\.gif))/ig;
+  var regex = new RegExp("^(https?://.*\.(?:.png|.jpg|.gif)$)","gi");
+  var regex2 = new RegExp("^(http|https)://\.*(.png|.jpg|.gif)$", "gi");
+  var attachments = "";
+  msg = vhodnoBesedilo.split(' ');
+  for(w in msg){
+    //msg[w].match(regex)
+    msg[w] = msg[w].replace(regex, function(url){
+      //return url+"\n<img class='img', src='" + url + "' />";
+      attachments += "<img class='img', src='" + url + "' />" + " ";
+      return url;
+    });
+  }
+  console.log(msg + " " + attachments);
+  //return msg.join(' ');
+  return msg.join(' ') + attachments;
 }
