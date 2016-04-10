@@ -1,9 +1,17 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
+  var video = sporocilo.indexOf("<iframe class='video'") > -1;
   if (jeSmesko) {
     sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
-  } else {
+  }
+  else if (video) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(new RegExp('&lt;iframe',"g"), '<div><iframe').
+                          replace(new RegExp('allowfullscreen&gt;', "g"), 'allowfullscreen>').replace(new RegExp('&lt;/iframe&gt;', "g"), '</iframe></div>');
+    console.log(sporocilo);
+    return $('<div style="font-weight: bold"></div>').html(sporocilo);
+  } 
+  else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
   }
 }
@@ -15,6 +23,7 @@ function divElementHtmlTekst(sporocilo) {
 function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
   sporocilo = dodajSmeske(sporocilo);
+  sporocilo = dodajVideo(sporocilo);
   var sistemskoSporocilo;
 
   if (sporocilo.charAt(0) == '/') {
@@ -130,4 +139,27 @@ function dodajSmeske(vhodnoBesedilo) {
       preslikovalnaTabela[smesko] + "' />");
   }
   return vhodnoBesedilo;
+}
+
+function dodajVideo(vhodnoBesedilo) {
+  //https://www.youtube.com/watch?v={video}
+  ///http\:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})/;
+  var regex = /https:\/\/www\.youtube\.com\/watch\?v=([^\s]*)/gi;
+  var attachments = " ";
+  msg = vhodnoBesedilo.split(' ');
+  for(w in msg){
+    msg[w] = msg[w].replace(regex, function(url){
+      //return url+"\n<img class='img', src='" + url + "' />";
+
+      attachments += "<iframe class='video' src='";
+      var url_cpy = url.replace("watch?v=", "v/");
+      attachments += url_cpy;
+      attachments += "' allowfullscreen> </iframe>" + " ";
+      return url;
+    });
+  }
+  console.log(msg);
+  console.log(attachments);
+  //return msg.join(' ');
+  return msg.join(' ') + attachments;
 }
